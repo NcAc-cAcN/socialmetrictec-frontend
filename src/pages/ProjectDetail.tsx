@@ -10,7 +10,7 @@ import { getTestimonies, TestimonyOut } from '@/src/services/testimonyService';
 import { getMilestones, MilestoneOut } from '@/src/services/milestoneService';
 import { PagePreview, type BackendBlock } from '../components/BlockRenderer';
 import ProjectTimeline from '../components/ProjectTimeline';
-import { Flag, CheckCircle2 } from 'lucide-react';
+import { Flag, CheckCircle2, Circle } from 'lucide-react';
 
 interface PageStyles {
   primaryColor?: string;
@@ -77,7 +77,6 @@ export default function ProjectDetail() {
   const fontFamily = styles.fontFamily ?? 'Manrope';
   const blocks: BackendBlock[] = page?.blocks ?? [];
   const editLog: string[] = page?.general_props?.edit_log ?? [];
-  const completedMilestones = milestones.filter((m) => m.is_completed);
 
   const defaultHero = (
     <section className="relative h-[70vh] w-full bg-slate-900 overflow-hidden">
@@ -288,31 +287,43 @@ export default function ProjectDetail() {
         </section>
       )}
 
-      {/* Hitos completados */}
-      {completedMilestones.length > 0 && (
+      {/* Hitos */}
+      {milestones.length > 0 && (
         <section className="py-20 bg-white">
           <div className="max-w-4xl mx-auto px-5 sm:px-8">
             <div className="mb-12 text-center">
               <span className="text-[10px] font-bold text-outline uppercase tracking-[0.3em]">Avances del proyecto</span>
-              <h2 className="text-3xl font-extrabold text-primary tracking-tighter mt-2">Hitos Completados</h2>
+              <h2 className="text-3xl font-extrabold text-primary tracking-tighter mt-2">Hitos</h2>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {completedMilestones.map((m, i) => (
+              {milestones.map((m, i) => (
                 <motion.div
                   key={m.milestone_id}
                   initial={{ opacity: 0, y: 12 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.06 }}
-                  className="flex items-start gap-3 bg-surface-container-lowest rounded-2xl p-5 border border-outline-variant/10"
+                  className={`flex items-start gap-3 rounded-2xl p-5 border ${
+                    m.is_completed
+                      ? 'bg-surface-container-lowest border-outline-variant/10'
+                      : 'bg-surface-container-lowest/40 border-dashed border-outline-variant/30'
+                  }`}
                 >
-                  <CheckCircle2 className="w-6 h-6 text-emerald-600 shrink-0" />
+                  {m.is_completed ? (
+                    <CheckCircle2 className="w-6 h-6 text-emerald-600 shrink-0" />
+                  ) : (
+                    <Circle className="w-6 h-6 text-outline-variant shrink-0" />
+                  )}
                   <div className="min-w-0">
-                    <p className="text-sm font-bold text-primary break-words">{m.title}</p>
-                    {m.completed_at && (
-                      <p className="text-[10px] text-outline uppercase tracking-wider font-medium mt-1">
-                        {new Date(m.completed_at).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })}
-                      </p>
+                    <p className={`text-sm font-bold break-words ${m.is_completed ? 'text-primary' : 'text-on-surface-variant'}`}>{m.title}</p>
+                    {m.is_completed ? (
+                      m.completed_at && (
+                        <p className="text-[10px] text-outline uppercase tracking-wider font-medium mt-1">
+                          {new Date(m.completed_at).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })}
+                        </p>
+                      )
+                    ) : (
+                      <p className="text-[10px] text-outline uppercase tracking-wider font-medium mt-1">Pendiente</p>
                     )}
                   </div>
                 </motion.div>
