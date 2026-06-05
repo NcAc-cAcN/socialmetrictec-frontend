@@ -11,7 +11,6 @@ import {
   Filter,
   AlertCircle,
   Loader2,
-  Download,
   Pencil,
   KeyRound,
   FolderOpen,
@@ -21,8 +20,7 @@ import {
 import api from '../lib/axios';
 import { cn } from '@/src/lib/utils';
 import PasswordInput from '../components/PasswordInput';
-import { exportTestimoniesCSV, getExportLog, ExportLogEntry } from '@/src/services/testimonyService';
-import { type ProjectSummary } from '@/src/services/projectService';
+import { type ProjectSummary, listProjects, deleteProject, formatArea } from '@/src/services/projectService';
 
 interface User {
   username: string;
@@ -41,7 +39,10 @@ type EditTab = 'profile' | 'password' | 'projects';
 
 const EMPTY_FORM: UserCreateForm = { username: '', email: '', password: '', confirmPassword: '' };
 
+type Section = 'leaders' | 'projects';
+
 export default function AdminPanel() {
+  const [section, setSection] = useState<Section>('leaders');
   const [users, setUsers] = useState<User[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -50,35 +51,6 @@ export default function AdminPanel() {
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [exportingCSV, setExportingCSV] = useState(false);
-  const [showExportModal, setShowExportModal] = useState(false);
-  const [exportDateFrom, setExportDateFrom] = useState('');
-  const [exportDateTo, setExportDateTo] = useState('');
-  const [exportLog, setExportLog] = useState<ExportLogEntry[]>([]);
-
-  const openExportModal = async () => {
-    setShowExportModal(true);
-    try {
-      setExportLog(await getExportLog());
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const handleExport = async () => {
-    setExportingCSV(true);
-    try {
-      await exportTestimoniesCSV({
-        dateFrom: exportDateFrom || undefined,
-        dateTo: exportDateTo || undefined,
-      });
-      setExportLog(await getExportLog());
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setExportingCSV(false);
-    }
-  };
 
   const [userToEdit, setUserToEdit] = useState<User | null>(null);
   const [editTab, setEditTab] = useState<EditTab>('profile');
@@ -93,6 +65,12 @@ export default function AdminPanel() {
   const [selectedProjectId, setSelectedProjectId] = useState('');
   const [assigningProject, setAssigningProject] = useState(false);
 
+  const [projectList, setProjectList] = useState<ProjectSummary[]>([]);
+  const [projectListLoaded, setProjectListLoaded] = useState(false);
+  const [projectSearch, setProjectSearch] = useState('');
+  const [projectToDelete, setProjectToDelete] = useState<ProjectSummary | null>(null);
+  const [deletingProject, setDeletingProject] = useState(false);
+
   useEffect(() => {
     api.get('/user/users-preview')
       .then((res) => setUsers(res.data))
@@ -104,10 +82,24 @@ export default function AdminPanel() {
     loadUserProjects(userToEdit.username);
   }, [editTab, userToEdit, projectsLoaded]);
 
+  useEffect(() => {
+    if (section !== 'projects' || projectListLoaded) return;
+    listProjects()
+      .then((list) => {
+        setProjectList(list);
+        setProjectListLoaded(true);
+      })
+      .catch(console.error);
+  }, [section, projectListLoaded]);
+
   const filteredUsers = users.filter(
     (u) =>
       u.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
       u.email.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
+
+  const filteredProjects = projectList.filter((p) =>
+    p.project_name.toLowerCase().includes(projectSearch.toLowerCase()),
   );
 
   const unassignedProjects = allProjects.filter(
@@ -287,16 +279,44 @@ export default function AdminPanel() {
     }
   };
 
+  const confirmDeleteProject = async () => {
+    if (!projectToDelete) return;
+    setDeletingProject(true);
+    try {
+      await deleteProject(projectToDelete.project_id);
+      setProjectList((list) => list.filter((p) => p.project_id !== projectToDelete.project_id));
+      setProjectToDelete(null);
+    } catch (err: any) {
+      console.error(err);
+    } finally {
+      setDeletingProject(false);
+    }
+  };
+
   return (
     <div className="flex min-h-[calc(100vh-64px)] bg-surface-container-lowest">
       <aside className="w-64 bg-white border-r border-outline-variant/10 p-6 space-y-8 hidden md:block">
         <div>
           <h2 className="text-[10px] font-extrabold text-outline uppercase tracking-[0.2em] mb-6">Administración</h2>
           <nav className="space-y-2">
-            <div className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold bg-primary/5 text-primary shadow-sm">
-              <Users className="w-5 h-5" />
-              Líderes
-            </div>
+            {([
+              { id: 'leaders',  label: 'Líderes',   Icon: Users      },
+              { id: 'projects', label: 'Proyectos', Icon: FolderOpen },
+            ] as { id: Section; label: string; Icon: React.ElementType }[]).map(({ id, label, Icon }) => (
+              <button
+                key={id}
+                onClick={() => setSection(id)}
+                className={cn(
+                  'w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-colors',
+                  section === id
+                    ? 'bg-primary/5 text-primary shadow-sm'
+                    : 'text-outline hover:bg-surface-container-low hover:text-on-surface-variant',
+                )}
+              >
+                <Icon className="w-5 h-5" />
+                {label}
+              </button>
+            ))}
           </nav>
         </div>
         <div className="pt-8 border-t border-outline-variant/5">
@@ -306,6 +326,8 @@ export default function AdminPanel() {
 
       <main className="flex-grow p-8 md:p-12">
         <div className="max-w-6xl mx-auto space-y-12">
+          {section === 'leaders' && (
+          <>
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div className="space-y-4">
               <div className="flex items-center gap-3 text-primary">
@@ -318,13 +340,6 @@ export default function AdminPanel() {
             </div>
 
             <div className="flex gap-3">
-              <button
-                onClick={openExportModal}
-                className="flex items-center gap-2 px-6 py-4 border border-outline-variant/20 text-on-surface-variant rounded-2xl text-[10px] font-bold uppercase tracking-widest hover:bg-surface-container-low transition-all"
-              >
-                <Download className="w-4 h-4" />
-                Exportar CSV
-              </button>
               <button
                 onClick={openAddModal}
                 className="flex items-center justify-center gap-3 px-8 py-4 bg-primary text-white rounded-2xl text-[10px] font-bold uppercase tracking-widest shadow-xl hover:brightness-110 active:scale-95 transition-all group"
@@ -434,6 +449,105 @@ export default function AdminPanel() {
               </div>
             )}
           </div>
+          </>
+          )}
+
+          {section === 'projects' && (
+          <>
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 text-primary">
+              <FolderOpen className="w-8 h-8" />
+              <h1 className="text-4xl font-extrabold tracking-tighter">Gestión de Proyectos</h1>
+            </div>
+            <p className="text-on-surface-variant font-light text-lg italic max-w-2xl">
+              Administra y elimina los proyectos publicados en la plataforma SocialMetricTec.
+            </p>
+          </div>
+
+          <div className="bg-white rounded-[32px] border border-outline-variant/10 shadow-sm overflow-hidden">
+            <div className="p-6 border-b border-outline-variant/5 flex items-center gap-4 bg-surface-container-lowest">
+              <div className="relative flex-grow">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-outline" />
+                <input
+                  type="text"
+                  placeholder="Buscar proyecto por nombre..."
+                  value={projectSearch}
+                  onChange={(e) => setProjectSearch(e.target.value)}
+                  className="w-full pl-12 pr-4 py-3 bg-white border border-outline-variant/20 rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all"
+                />
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="bg-surface-container-lowest">
+                    <th className="px-8 py-4 text-[10px] font-extrabold text-outline uppercase tracking-widest">Proyecto</th>
+                    <th className="px-8 py-4 text-[10px] font-extrabold text-outline uppercase tracking-widest">Área de Impacto</th>
+                    <th className="px-8 py-4 text-[10px] font-extrabold text-outline uppercase tracking-widest text-right">
+                      Acciones
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-outline-variant/5">
+                  {filteredProjects.map((project) => (
+                    <motion.tr
+                      layout
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      key={project.project_id}
+                      className="hover:bg-surface-container-lowest transition-colors group"
+                    >
+                      <td className="px-8 py-6">
+                        <div className="flex items-center gap-4">
+                          <img
+                            src={project.cover_image_url || 'https://picsum.photos/seed/project/80/80'}
+                            alt=""
+                            className="w-10 h-10 rounded-xl object-cover border border-outline-variant/10 shrink-0"
+                          />
+                          <div className="min-w-0">
+                            <p className="text-sm font-bold text-primary truncate">{project.project_name}</p>
+                            {project.description && (
+                              <p className="text-xs text-outline truncate max-w-xs">{project.description}</p>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-8 py-6">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-outline">
+                          {formatArea(project.impact_area)}
+                        </span>
+                      </td>
+                      <td className="px-8 py-6 text-right">
+                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => setProjectToDelete(project)}
+                            className="p-2 text-outline-variant hover:text-error hover:bg-error/5 rounded-lg transition-all"
+                            title="Eliminar proyecto"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </motion.tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {filteredProjects.length === 0 && (
+              <div className="p-20 text-center space-y-4">
+                <div className="w-20 h-20 bg-surface-container-low rounded-full flex items-center justify-center mx-auto text-outline/30">
+                  <FolderOpen className="w-10 h-10" />
+                </div>
+                <p className="text-on-surface-variant font-light italic">
+                  {projectListLoaded ? 'No se encontraron proyectos.' : 'Cargando proyectos…'}
+                </p>
+              </div>
+            )}
+          </div>
+          </>
+          )}
         </div>
       </main>
 
@@ -782,81 +896,56 @@ export default function AdminPanel() {
         </div>
       )}
 
-      {showExportModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+      {/* Modal: Confirmar Eliminación de Proyecto */}
+      {projectToDelete && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-6">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            onClick={() => setShowExportModal(false)}
+            onClick={() => setProjectToDelete(null)}
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
           />
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="relative w-full max-w-lg bg-white rounded-[32px] shadow-2xl p-10 max-h-[90vh] overflow-y-auto"
+            className="relative w-full max-w-md bg-white rounded-[32px] shadow-2xl p-8 overflow-hidden"
           >
-            <button onClick={() => setShowExportModal(false)} className="absolute top-6 right-6 p-2 text-outline hover:text-primary transition-colors">
-              <X className="w-6 h-6" />
-            </button>
+            <div className="flex flex-col items-center text-center space-y-6">
+              <div className="w-16 h-16 rounded-2xl bg-error/10 flex items-center justify-center text-error">
+                <Trash2 className="w-8 h-8" />
+              </div>
 
-            <div className="space-y-8">
-              <div>
-                <h2 className="text-3xl font-extrabold text-primary tracking-tighter">Exportar Testimonios</h2>
-                <p className="text-on-surface-variant font-light text-sm mt-2 font-body">
-                  Descarga un CSV compatible con Excel y Google Sheets. Opcionalmente filtra por rango de fechas.
+              <div className="space-y-2">
+                <h3 className="text-2xl font-extrabold text-primary tracking-tighter">¿Eliminar Proyecto?</h3>
+                <p className="text-on-surface-variant font-light text-sm leading-relaxed px-4">
+                  Estás a punto de eliminar el proyecto{' '}
+                  <span className="font-bold text-primary">{projectToDelete.project_name}</span>. Esta acción{' '}
+                  <span className="font-bold text-error">no es reversible</span>.
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-outline uppercase tracking-widest">Desde</label>
-                  <input
-                    type="date"
-                    value={exportDateFrom}
-                    onChange={(e) => setExportDateFrom(e.target.value)}
-                    className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-4 text-sm focus:ring-2 focus:ring-primary outline-none"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-outline uppercase tracking-widest">Hasta</label>
-                  <input
-                    type="date"
-                    value={exportDateTo}
-                    onChange={(e) => setExportDateTo(e.target.value)}
-                    className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-4 text-sm focus:ring-2 focus:ring-primary outline-none"
-                  />
-                </div>
+              <div className="bg-surface-container-low p-4 rounded-2xl border border-outline-variant/10 text-left">
+                <p className="text-[10px] font-bold text-outline uppercase tracking-widest mb-1">Aviso Importante</p>
+                <p className="text-xs text-on-surface-variant font-medium leading-relaxed">
+                  Se eliminarán también su página, hitos, métricas, fotos y testimonios{' '}
+                  <span className="font-bold text-error">de forma permanente</span>.
+                </p>
               </div>
 
-              <button
-                onClick={handleExport}
-                disabled={exportingCSV}
-                className="w-full py-4 bg-primary text-white rounded-2xl text-[10px] font-bold uppercase tracking-widest shadow-xl hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-60"
-              >
-                {exportingCSV ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                Descargar CSV
-              </button>
-
-              <div className="space-y-3">
-                <label className="text-[10px] font-bold text-outline uppercase tracking-widest">Historial de exportaciones</label>
-                {exportLog.length === 0 ? (
-                  <p className="text-xs text-outline italic">Aún no hay exportaciones registradas.</p>
-                ) : (
-                  <div className="space-y-2 max-h-48 overflow-y-auto">
-                    {exportLog.map((entry) => (
-                      <div key={entry.export_id} className="flex items-center justify-between bg-surface-container-low rounded-xl px-4 py-3">
-                        <div>
-                          <p className="text-xs font-bold text-primary">{entry.exported_by}</p>
-                          <p className="text-[10px] text-outline">
-                            {new Date(entry.created_at).toLocaleString('es-MX')}
-                            {(entry.date_from || entry.date_to) && ` · ${entry.date_from ?? '…'} → ${entry.date_to ?? '…'}`}
-                          </p>
-                        </div>
-                        <span className="text-[10px] font-bold text-outline uppercase tracking-widest">{entry.row_count} filas</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
+              <div className="flex gap-3 w-full pt-4">
+                <button
+                  onClick={() => setProjectToDelete(null)}
+                  className="flex-grow py-4 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant hover:bg-surface-container-low rounded-2xl transition-all"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={confirmDeleteProject}
+                  disabled={deletingProject}
+                  className="flex-grow py-4 bg-error text-white rounded-2xl text-[10px] font-bold uppercase tracking-widest shadow-lg hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-60"
+                >
+                  {deletingProject ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirmar Eliminación'}
+                </button>
               </div>
             </div>
           </motion.div>

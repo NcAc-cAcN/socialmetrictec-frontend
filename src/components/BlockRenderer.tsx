@@ -141,14 +141,14 @@ export function BlockRenderer({
               Aún no hay métricas registradas para este proyecto.
             </p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+            <div className="flex flex-wrap justify-center gap-12">
               {metrics.map((metric, idx) => (
                 <motion.div
                   key={metric.metric_id}
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.1 }}
-                  className="bg-white p-8 rounded-2xl shadow-sm border border-outline-variant/10"
+                  className="bg-white p-8 rounded-2xl shadow-sm border border-outline-variant/10 flex-1 basis-72 min-w-[280px] max-w-md"
                 >
                   <h3 className="text-[10px] font-bold text-on-surface-variant uppercase tracking-[0.2em] mb-6">
                     {metric.metric_title}

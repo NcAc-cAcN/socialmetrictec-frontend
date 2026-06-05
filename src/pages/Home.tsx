@@ -216,62 +216,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      {/* CTA Section */}
-      <section className="py-24 md:py-32 px-6 md:px-12 bg-primary text-on-primary overflow-hidden relative">
-        <div className="max-w-screen-xl mx-auto flex flex-col lg:flex-row items-center gap-16 relative z-10">
-          <div className="lg:w-1/2 space-y-8">
-            <h2 className="text-5xl md:text-6xl font-extrabold tracking-tighter leading-tight">Tu acción es el motor del cambio.</h2>
-            <p className="text-xl text-on-primary-container font-light leading-relaxed">
-              Forma parte de la comunidad de impacto más grande de la institución. No importa tu perfil, hay un lugar para tu talento en el servicio social.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-6 pt-4">
-              <button className="bg-surface-container-lowest text-primary px-10 py-5 rounded-md font-bold text-lg hover:scale-105 transition-transform shadow-xl">
-                Únete como Voluntario
-              </button>
-              <button className="border-2 border-on-primary/30 text-on-primary px-10 py-5 rounded-md font-bold text-lg hover:bg-on-primary/10 transition-colors">
-                Contactar con un Líder
-              </button>
-            </div>
-          </div>
-          
-          <div className="lg:w-1/2 flex justify-center">
-            <motion.div 
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="relative w-full max-w-md bg-white/5 backdrop-blur-xl p-8 rounded-3xl border border-white/10 shadow-2xl"
-            >
-              <div className="flex items-center gap-4 border-b border-white/10 pb-6 mb-6">
-                <div className="w-12 h-12 bg-primary-container/30 rounded-full flex items-center justify-center">
-                  <HeartPulse className="w-6 h-6 text-on-primary" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-xl">¿Por qué ser voluntario?</h4>
-                  <p className="text-sm opacity-60">Transformación mutua</p>
-                </div>
-              </div>
-              <ul className="space-y-4">
-                {[
-                  'Desarrollo de competencias transversales',
-                  'Conexión con problemáticas reales',
-                  'Validación de Servicio Social Institucional',
-                  'Red de contactos en el tercer sector'
-                ].map((item, i) => (
-                  <li key={i} className="flex items-center gap-3 text-sm">
-                    <CheckCircle2 className="w-5 h-5 text-on-primary-container" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
-          </div>
-        </div>
-        
-        {/* Background Decorative Elements */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-primary-container/20 rounded-full blur-[120px] -mr-48 -mt-48"></div>
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-tertiary-container/10 rounded-full blur-[120px] -ml-48 -mb-48"></div>
-      </section>
     </div>
   );
 }

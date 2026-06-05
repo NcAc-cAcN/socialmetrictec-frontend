@@ -104,15 +104,6 @@ const LoginForm = () => {
           <>Iniciar Sesión <ArrowRight className="w-5 h-5" /></>
         )}
       </button>
-
-      <div className="text-center">
-        <button 
-          type="button" // Evita que este botón envíe el form
-          className="text-sm font-semibold text-primary hover:underline underline-offset-4 transition-all cursor-pointer"
-        >
-          Olvidé mi contraseña
-        </button>
-      </div>
     </form>
   );
 };
@@ -165,21 +156,7 @@ export default function Login() {
 
           {/* Login Card */}
           <LoginForm/>
-          {/* Stats Section */}
-          <div className="pt-12 border-t border-outline-variant/10 flex justify-between items-start gap-8">
-            <div className="space-y-1">
-              <div className="text-2xl font-extrabold text-primary tracking-tighter">1.2k+</div>
-              <div className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest opacity-60">
-                Active Researchers
-              </div>
-            </div>
-            <div className="space-y-1">
-              <div className="text-2xl font-extrabold text-primary tracking-tighter">94%</div>
-              <div className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest opacity-60">
-                Social Relevance
-              </div>
-            </div>
-          </div>
+          
         </div>
       </main>
 

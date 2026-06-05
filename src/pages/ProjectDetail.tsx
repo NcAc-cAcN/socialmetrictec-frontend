@@ -11,6 +11,7 @@ import { getMilestones, MilestoneOut } from '@/src/services/milestoneService';
 import { PagePreview, type BackendBlock } from '../components/BlockRenderer';
 import ProjectTimeline from '../components/ProjectTimeline';
 import { Flag, CheckCircle2, Circle } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 interface PageStyles {
   primaryColor?: string;
@@ -23,6 +24,7 @@ const withProtocol = (url?: string) =>
 
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
   const [project, setProject] = useState<Awaited<ReturnType<typeof getProject>> | null>(null);
   const [metrics, setMetrics] = useState<MetricOut[]>([]);
   const [photos, setPhotos] = useState<PhotoOut[]>([]);
@@ -232,7 +234,7 @@ export default function ProjectDetail() {
                     </div>
 
                     <div className="px-5 sm:px-7 pb-7">
-                      <div className="flex items-end justify-between gap-3 -mt-10 mb-5">
+                      <div className="flex items-end justify-between gap-3 mt-5 mb-5">
                         <div className="w-20 h-20 rounded-2xl bg-white p-1 shadow-lg shrink-0">
                           <div className="w-full h-full rounded-[14px] bg-primary/10 flex items-center justify-center">
                             <span className="text-xl font-extrabold text-primary tracking-tight">{leader.username.slice(0, 2).toUpperCase()}</span>
@@ -333,22 +335,24 @@ export default function ProjectDetail() {
         </section>
       )}
 
-      {/* Línea de tiempo */}
-      <section className="py-20 bg-surface-container-lowest">
-        <div className="max-w-3xl mx-auto px-5 sm:px-8">
-          <div className="mb-12 text-center">
-            <span className="text-[10px] font-bold text-outline uppercase tracking-[0.3em]">Evolución</span>
-            <h2 className="text-3xl font-extrabold text-primary tracking-tighter mt-2">Línea de Tiempo</h2>
+      {/* Línea de tiempo (solo administradores) */}
+      {user?.is_admin && (
+        <section className="py-20 bg-surface-container-lowest">
+          <div className="max-w-3xl mx-auto px-5 sm:px-8">
+            <div className="mb-12 text-center">
+              <span className="text-[10px] font-bold text-outline uppercase tracking-[0.3em]">Evolución</span>
+              <h2 className="text-3xl font-extrabold text-primary tracking-tighter mt-2">Línea de Tiempo</h2>
+            </div>
+            <ProjectTimeline
+              createdAt={project.created_at}
+              editLog={editLog}
+              testimonies={testimonies}
+              photos={photos}
+              milestones={milestones}
+            />
           </div>
-          <ProjectTimeline
-            createdAt={project.created_at}
-            editLog={editLog}
-            testimonies={testimonies}
-            photos={photos}
-            milestones={milestones}
-          />
-        </div>
-      </section>
+        </section>
+      )}
 
       <footer className="py-24 bg-primary text-white text-center">
         <div className="max-w-4xl mx-auto px-5 sm:px-8 space-y-8">

@@ -9,17 +9,7 @@ export default function Footer() {
           </span>
         </div>
         
-        <div className="flex flex-wrap justify-center gap-6 md:gap-8 items-center">
-          {['Privacidad', 'Transparencia', 'Contacto', 'Reporte Anual'].map((item) => (
-            <a 
-              key={item}
-              href="#" 
-              className="font-body text-[10px] md:text-xs uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors underline underline-offset-4"
-            >
-              {item}
-            </a>
-          ))}
-        </div>
+        
       </div>
     </footer>
   );
