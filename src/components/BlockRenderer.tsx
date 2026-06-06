@@ -1,3 +1,4 @@
+import { Fragment, type ReactNode } from 'react';
 import { motion } from 'motion/react';
 import { Video } from 'lucide-react';
 import type { MetricOut } from '@/src/services/metricService';
@@ -270,6 +271,8 @@ interface PagePreviewProps {
   metrics?: MetricOut[];
   fontFamily?: string;
   heroFallbackUrl?: string;
+  /** Contenido que se inserta justo antes del bloque de métricas (o al final si no hay). */
+  beforeMetrics?: ReactNode;
 }
 
 export function PagePreview({
@@ -279,20 +282,26 @@ export function PagePreview({
   metrics = [],
   fontFamily = 'Manrope',
   heroFallbackUrl,
+  beforeMetrics,
 }: PagePreviewProps) {
+  const metricsIndex = blocks.findIndex((block) => block.type === 'metrics');
+
   return (
     <>
       {blocks.map((block, i) => (
-        <BlockRenderer
-          key={i}
-          block={block}
-          primaryColor={primaryColor}
-          secondaryColor={secondaryColor}
-          metrics={metrics}
-          fontFamily={fontFamily}
-          heroFallbackUrl={heroFallbackUrl}
-        />
+        <Fragment key={i}>
+          {beforeMetrics && i === metricsIndex && beforeMetrics}
+          <BlockRenderer
+            block={block}
+            primaryColor={primaryColor}
+            secondaryColor={secondaryColor}
+            metrics={metrics}
+            fontFamily={fontFamily}
+            heroFallbackUrl={heroFallbackUrl}
+          />
+        </Fragment>
       ))}
+      {beforeMetrics && metricsIndex === -1 && beforeMetrics}
     </>
   );
 }

@@ -14,6 +14,7 @@ export interface ProjectSummary {
   impact_area: string;
   cover_image_url: string;
   is_active: boolean;
+  numero_beneficiarios: number;
   created_at: string;
 }
 
@@ -24,7 +25,7 @@ export interface ProjectCreate {
   cover_image_url: string;
   is_active: boolean;
   objetivo?: string;
-  localidad?: string;
+  numero_beneficiarios: number;
 }
 
 export interface ProjectFull extends ProjectSummary {

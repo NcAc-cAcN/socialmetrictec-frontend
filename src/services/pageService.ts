@@ -17,6 +17,7 @@ export interface ProjectFull {
   impact_area: string;
   cover_image_url: string;
   is_active: boolean;
+  numero_beneficiarios: number;
   created_at: string;
   page: BackendPage | null;
 }

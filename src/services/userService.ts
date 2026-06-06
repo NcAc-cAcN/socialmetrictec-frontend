@@ -2,7 +2,6 @@ import api from '@/src/lib/axios';
 
 export interface UserProfile {
   description?: string;
-  phone?: string;
   website?: string;
   linkedin?: string;
   instagram?: string;

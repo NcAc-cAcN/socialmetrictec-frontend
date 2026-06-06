@@ -44,7 +44,7 @@ export default function CreateProject() {
     name: '',
     description: '',
     objetivo: '',
-    localidad: '',
+    beneficiarios: '',
     area: 'ods_1',
     image: '',
   });
@@ -61,6 +61,12 @@ export default function CreateProject() {
       return;
     }
 
+    const beneficiarios = Number(formData.beneficiarios);
+    if (formData.beneficiarios.trim() === '' || !Number.isInteger(beneficiarios) || beneficiarios < 0) {
+      setError('Indica el número de beneficiarios (un entero igual o mayor que 0).');
+      return;
+    }
+
     setSubmitting(true);
     try {
       const project = await createProject({
@@ -70,7 +76,7 @@ export default function CreateProject() {
         cover_image_url: formData.image || 'https://picsum.photos/seed/project/800/600',
         is_active: true,
         objetivo: formData.objetivo || undefined,
-        localidad: formData.localidad || undefined,
+        numero_beneficiarios: beneficiarios,
       });
       setCurrentProject({
         id: String(project.project_id),
@@ -162,15 +168,18 @@ export default function CreateProject() {
                 </div>
 
                 <div className="space-y-4">
-                  <label className="text-[10px] font-bold text-outline uppercase tracking-widest">Localidad *</label>
+                  <label className="text-[10px] font-bold text-outline uppercase tracking-widest">Número de Beneficiarios *</label>
                   <input
                     required
-                    type="text"
-                    placeholder="Ej: Monterrey, N.L."
-                    value={formData.localidad}
-                    onChange={(e) => setFormData({ ...formData, localidad: e.target.value })}
+                    type="number"
+                    min={0}
+                    step={1}
+                    placeholder="Ej: 250"
+                    value={formData.beneficiarios}
+                    onChange={(e) => setFormData({ ...formData, beneficiarios: e.target.value })}
                     className="w-full bg-surface-container-low border-none rounded-2xl p-6 text-sm focus:ring-2 focus:ring-primary transition-all outline-none"
                   />
+                  <p className="text-[11px] text-on-surface-variant">Personas impactadas directamente por el proyecto.</p>
                 </div>
               </div>
 

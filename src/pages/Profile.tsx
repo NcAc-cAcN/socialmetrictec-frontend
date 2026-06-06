@@ -6,7 +6,6 @@ import {
   Check,
   User as UserIcon,
   Mail,
-  Phone,
   Globe,
   Linkedin,
   Instagram,
@@ -21,7 +20,6 @@ import PasswordInput from '../components/PasswordInput';
 
 const EMPTY_PROFILE: UserProfile = {
   description: '',
-  phone: '',
   website: '',
   linkedin: '',
   instagram: '',
@@ -159,39 +157,32 @@ export default function Profile() {
                 placeholder="Cuéntale a los visitantes quién eres y tu rol en el proyecto..."
                 className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-4 text-sm focus:ring-2 focus:ring-primary outline-none resize-none leading-relaxed transition-all"
               />
+              <p className="text-[11px] text-on-surface-variant">Es lo único que necesitas completar; lo demás es opcional.</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-outline uppercase tracking-widest">Teléfono</label>
-                <div className="relative">
-                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-outline" />
-                  <input
-                    type="text"
-                    value={profile.phone ?? ''}
-                    onChange={(e) => setField('phone', e.target.value)}
-                    placeholder="+52 81 ..."
-                    className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-4 pl-11 text-sm focus:ring-2 focus:ring-primary outline-none transition-all"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-outline uppercase tracking-widest">Sitio web</label>
-                <div className="relative">
-                  <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-outline" />
-                  <input
-                    type="text"
-                    value={profile.website ?? ''}
-                    onChange={(e) => setField('website', e.target.value)}
-                    placeholder="https://..."
-                    className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-4 pl-11 text-sm focus:ring-2 focus:ring-primary outline-none transition-all"
-                  />
-                </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-outline uppercase tracking-widest">
+                Sitio web <span className="ml-2 align-middle text-[10px] font-bold uppercase tracking-wider text-white bg-error px-2.5 py-1 rounded-full">Opcional</span>
+              </label>
+              <div className="relative">
+                <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-outline" />
+                <input
+                  type="text"
+                  value={profile.website ?? ''}
+                  onChange={(e) => setField('website', e.target.value)}
+                  placeholder="https://..."
+                  className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-4 pl-11 text-sm focus:ring-2 focus:ring-primary outline-none transition-all"
+                />
               </div>
             </div>
 
             <div className="space-y-3">
-              <label className="text-[10px] font-bold text-outline uppercase tracking-widest">Redes sociales</label>
+              <div>
+                <label className="text-[10px] font-bold text-outline uppercase tracking-widest">
+                  Redes sociales <span className="ml-2 align-middle text-[10px] font-bold uppercase tracking-wider text-white bg-error px-2.5 py-1 rounded-full">Opcional</span>
+                </label>
+                <p className="text-[11px] text-on-surface-variant mt-1">Las que dejes vacías no se mostrarán en tu perfil.</p>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {SOCIAL_FIELDS.map(({ key, label, icon: Icon, placeholder }) => (
                   <div key={key} className="relative">

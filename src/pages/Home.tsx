@@ -6,6 +6,17 @@ import { listProjects, formatArea, ProjectSummary } from '@/src/services/project
 
 const SDG_GOALS = Array.from({ length: 17 }, (_, i) => i + 1);
 
+// Colores oficiales de cada ODS, para diferenciar cada proyecto por su área de impacto.
+const SDG_COLORS: Record<number, string> = {
+  1: '#E5243B',  2: '#DDA63A',  3: '#4C9F38',  4: '#C5192D',  5: '#FF3A21',
+  6: '#26BDE2',  7: '#FCC30B',  8: '#A21942',  9: '#FD6925', 10: '#DD1367',
+  11: '#FD9D24', 12: '#BF8B2E', 13: '#3F7E44', 14: '#0A97D9', 15: '#56C02B',
+  16: '#00689D', 17: '#19486A',
+};
+
+const sdgColor = (area: string): string =>
+  SDG_COLORS[Number(area.replace('ods_', ''))] ?? '#6750A4';
+
 export default function Home() {
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
 
@@ -23,10 +34,15 @@ export default function Home() {
     return acc;
   }, {});
 
+  // Las ODS con más proyectos (hasta 3, o las que haya si son menos).
+  const topAreas = Object.entries(projectsPerArea)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3);
+
   const metrics = [
     { label: 'Iniciativas Documentadas', value: projects.length },
     { label: 'Proyectos Activos', value: projects.filter((p) => p.is_active).length },
-    { label: 'Áreas de Impacto (ODS)', value: new Set(projects.map((p) => p.impact_area)).size },
+    { label: 'Áreas de Mayor Impacto', areas: topAreas },
     { label: `Publicados en ${currentYear}`, value: projects.filter((p) => new Date(p.created_at).getFullYear() === currentYear).length },
   ];
 
@@ -87,9 +103,28 @@ export default function Home() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.1 }}
               viewport={{ once: true }}
-              className="space-y-2"
+              className="space-y-3"
             >
-              <span className="text-4xl md:text-5xl font-extrabold text-primary tracking-tighter">{metric.value}</span>
+              {'areas' in metric ? (
+                metric.areas.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {metric.areas.map(([area, count]) => (
+                      <span
+                        key={area}
+                        className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-white text-xs font-bold shadow-sm"
+                        style={{ backgroundColor: sdgColor(area) }}
+                      >
+                        ODS {area.replace('ods_', '')}
+                        <span className="opacity-80">· {count}</span>
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <span className="text-4xl md:text-5xl font-extrabold text-primary tracking-tighter">0</span>
+                )
+              ) : (
+                <span className="text-4xl md:text-5xl font-extrabold text-primary tracking-tighter">{metric.value}</span>
+              )}
               <p className="text-xs md:text-sm uppercase tracking-widest text-on-surface-variant font-semibold">{metric.label}</p>
             </motion.div>
           ))}
@@ -112,9 +147,9 @@ export default function Home() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {featuredProjects.map((project, idx) => {
-              const isLarge = idx % 3 === 0;
+              const accent = sdgColor(project.impact_area);
               return (
                 <motion.div
                   key={project.project_id}
@@ -122,41 +157,37 @@ export default function Home() {
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.1 }}
                   viewport={{ once: true }}
-                  className={cn(
-                    'group rounded-2xl overflow-hidden tonal-card',
-                    isLarge ? 'md:col-span-8' : 'md:col-span-4',
-                  )}
+                  className="group flex flex-col h-full rounded-2xl overflow-hidden tonal-card border-t-4"
+                  style={{ borderTopColor: accent }}
                 >
-                  <div className={cn('flex flex-col h-full', isLarge ? 'md:flex-row' : '')}>
-                    <div className={cn('overflow-hidden', isLarge ? 'md:w-1/2 h-64 md:h-full' : 'h-64')}>
-                      <img
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                        src={project.cover_image_url || 'https://picsum.photos/seed/project/800/600'}
-                        alt={project.project_name}
-                        referrerPolicy="no-referrer"
-                      />
-                    </div>
-                    <div className={cn('p-8 md:p-10 flex flex-col justify-center space-y-6', isLarge ? 'md:w-1/2' : '')}>
-                      <span className="text-tertiary-container font-bold text-xs uppercase tracking-widest">
-                        {formatArea(project.impact_area)}
-                      </span>
-                      <h3 className="text-2xl font-bold text-primary leading-tight">{project.project_name}</h3>
-                      <p className="text-on-surface-variant text-sm leading-relaxed">
-                        {project.description ?? 'Sin descripción.'}
-                      </p>
-                      <Link
-                        to={`/project/${project.project_id}`}
-                        className="self-start text-primary border-b-2 border-primary pb-1 font-bold hover:text-primary-container hover:border-primary-container transition-colors"
-                      >
-                        Ver Detalles
-                      </Link>
-                    </div>
+                  <div className="h-52 overflow-hidden">
+                    <img
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      src={project.cover_image_url || 'https://picsum.photos/seed/project/800/600'}
+                      alt={project.project_name}
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
+                  <div className="p-6 flex flex-col flex-grow space-y-4">
+                    <span className="font-bold text-xs uppercase tracking-widest" style={{ color: accent }}>
+                      {formatArea(project.impact_area)}
+                    </span>
+                    <h3 className="text-xl font-bold text-primary leading-tight">{project.project_name}</h3>
+                    <p className="text-on-surface-variant text-sm leading-relaxed line-clamp-3 flex-grow">
+                      {project.description ?? 'Sin descripción.'}
+                    </p>
+                    <Link
+                      to={`/project/${project.project_id}`}
+                      className="self-start text-primary border-b-2 border-primary pb-1 font-bold hover:text-primary-container hover:border-primary-container transition-colors"
+                    >
+                      Ver Detalles
+                    </Link>
                   </div>
                 </motion.div>
               );
             })}
             {featuredProjects.length === 0 && (
-              <div className="md:col-span-12 py-16 text-center text-on-surface-variant">
+              <div className="sm:col-span-2 lg:col-span-4 py-16 text-center text-on-surface-variant">
                 Aún no hay proyectos publicados.{' '}
                 <Link to="/create-project" className="text-primary font-bold hover:underline">
                   Crea el primero
@@ -198,7 +229,7 @@ export default function Home() {
                       alt={formatArea(area)}
                       className={count > 0
                         ? 'w-full h-full object-cover'
-                        : 'w-full h-full object-cover opacity-55 group-hover:opacity-100 transition-opacity'}
+                        : 'w-full h-full object-cover opacity-20 grayscale group-hover:opacity-100 group-hover:grayscale-0 transition-all duration-300'}
                     />
                     {count > 0 && (
                       <span className="absolute top-2 right-2 min-w-6 h-6 px-2 rounded-full bg-white/95 text-primary text-xs font-extrabold flex items-center justify-center shadow-sm">
@@ -218,8 +249,4 @@ export default function Home() {
       </section>
     </div>
   );
-}
-
-function cn(...inputs: any[]) {
-  return inputs.filter(Boolean).join(' ');
 }
