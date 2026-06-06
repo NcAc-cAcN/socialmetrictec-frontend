@@ -19,6 +19,7 @@ import { useAuth } from '../context/AuthContext';
 import { useProject } from '../context/ProjectContext';
 import { PagePreview } from '../components/BlockRenderer';
 import NoProjectSelected from '../components/NoProjectSelected';
+import UploadButton from '../components/UploadButton';
 import MetricsManager from '../components/managers/MetricsManager';
 import PhotosManager from '../components/managers/PhotosManager';
 import TestimoniesManager from '../components/managers/TestimoniesManager';
@@ -211,7 +212,7 @@ function ImageSection({ section, onChange }: { section: Section; onChange: (s: P
       ) : (
         <div className="w-full aspect-video rounded-xl bg-surface-container flex flex-col items-center justify-center border-2 border-dashed border-outline-variant/20 gap-3">
           <ImageIcon className="w-10 h-10 text-outline/30" />
-          <p className="text-sm text-outline/40">Pega la URL de la imagen abajo</p>
+          <p className="text-sm text-outline/40">Sube una imagen o pega su URL abajo</p>
         </div>
       )}
       <input
@@ -220,6 +221,11 @@ function ImageSection({ section, onChange }: { section: Section; onChange: (s: P
         onChange={(e) => onChange({ url: e.target.value })}
         placeholder="URL de la imagen (https://...)"
         className="w-full text-sm bg-surface-container-low rounded-xl px-4 py-3 outline-none border border-outline-variant/20 focus:border-primary/40 transition-colors placeholder:text-outline/30 font-mono"
+      />
+      <UploadButton
+        label="Subir imagen"
+        accept="image/jpeg,image/png,image/webp,image/gif"
+        onUploaded={(url) => onChange({ url })}
       />
       <input
         type="text"
@@ -240,7 +246,7 @@ function VideoSection({ section, onChange }: { section: Section; onChange: (s: P
       ) : (
         <div className="w-full aspect-video rounded-xl bg-surface-container flex flex-col items-center justify-center border-2 border-dashed border-outline-variant/20 gap-3">
           <Video className="w-10 h-10 text-outline/30" />
-          <p className="text-sm text-outline/40">Pega la URL del video abajo</p>
+          <p className="text-sm text-outline/40">Sube un video o pega su URL abajo</p>
         </div>
       )}
       <input
@@ -249,6 +255,11 @@ function VideoSection({ section, onChange }: { section: Section; onChange: (s: P
         onChange={(e) => onChange({ url: e.target.value })}
         placeholder="URL del video (https://...)"
         className="w-full text-sm bg-surface-container-low rounded-xl px-4 py-3 outline-none border border-outline-variant/20 focus:border-primary/40 transition-colors placeholder:text-outline/30 font-mono"
+      />
+      <UploadButton
+        label="Subir video"
+        accept="video/mp4,video/webm"
+        onUploaded={(url) => onChange({ url })}
       />
       <input
         type="text"
@@ -556,13 +567,19 @@ export default function Editor() {
             {/* Cover image URL */}
             <div className="bg-white border-b border-outline-variant/10 px-6 md:px-12 py-4">
               <div className="max-w-3xl mx-auto">
-                <label className="block text-[10px] font-bold uppercase tracking-widest text-outline mb-2">URL imagen de portada</label>
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-outline mb-2">Imagen de portada</label>
                 <input
                   type="url"
                   value={state.coverImage}
                   onChange={(e) => setState((p) => ({ ...p, coverImage: e.target.value }))}
-                  placeholder="https://..."
+                  placeholder="Pega una URL (https://...) o sube un archivo"
                   className="w-full text-sm bg-surface-container-low rounded-xl px-4 py-3 outline-none border border-outline-variant/20 focus:border-primary/40 transition-colors placeholder:text-outline/30 font-mono"
+                />
+                <UploadButton
+                  label="Subir imagen de portada"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  onUploaded={(url) => setState((p) => ({ ...p, coverImage: url }))}
+                  className="mt-2"
                 />
               </div>
             </div>

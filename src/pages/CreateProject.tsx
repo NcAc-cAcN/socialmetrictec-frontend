@@ -11,6 +11,7 @@ import {
 import { cn } from '@/src/lib/utils';
 import { createProject, formatArea } from '@/src/services/projectService';
 import { useProject } from '../context/ProjectContext';
+import UploadButton from '../components/UploadButton';
 
 const STRATEGIC_AREAS = [
   { label: 'Fin de la pobreza',             value: 'ods_1',  img: '/sdg/ods-1.jpg' },
@@ -197,7 +198,7 @@ export default function CreateProject() {
                       </div>
                       <div>
                         <p className="text-xs font-bold text-primary uppercase tracking-widest mb-1">
-                          Pega una URL de imagen
+                          Sube una imagen o pega una URL
                         </p>
                         <p className="text-[10px] text-outline font-medium">Recomendado: 1200x800px</p>
                       </div>
@@ -211,6 +212,11 @@ export default function CreateProject() {
                     onChange={(e) => setFormData({ ...formData, image: e.target.value })}
                   />
                 </div>
+                <UploadButton
+                  label="Subir imagen de portada"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  onUploaded={(url) => setFormData({ ...formData, image: url })}
+                />
               </div>
             </div>
 
